@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.IO;
 
+// ReSharper disable once CheckNamespace
 namespace NAudio.Wave
 {
     /// <summary>
@@ -9,7 +9,7 @@ namespace NAudio.Wave
     /// </summary>
     public class CueWaveFileReader : WaveFileReader
     {
-        private CueList cues = null;
+        private CueList cues;
 
         /// <summary>
         /// Loads a wavefile and supports reading cues
@@ -17,6 +17,15 @@ namespace NAudio.Wave
         /// <param name="fileName"></param>
         public CueWaveFileReader(string fileName)
             : base(fileName)
+        {
+        }
+
+        /// <summary>
+        /// Loads a wave from a stream and supports reading cues
+        /// </summary>
+        /// <param name="inputStream"></param>
+        public CueWaveFileReader(Stream inputStream)
+            : base(inputStream)
         {
         }
 

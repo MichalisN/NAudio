@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Linq;
 using NAudio.Wave;
-using System.ComponentModel.Composition;
 
 namespace NAudioDemo.NetworkChatDemo
 {
-    [Export(typeof(INetworkChatCodec))]
     class Gsm610ChatCodec : AcmChatCodec
     {
         public Gsm610ChatCodec()
@@ -13,6 +11,6 @@ namespace NAudioDemo.NetworkChatDemo
         {
         }
 
-        public override string Name { get { return "GSM 6.10"; } }
+        public override string Name => "GSM 6.10";
     }
 }

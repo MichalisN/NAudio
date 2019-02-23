@@ -16,17 +16,17 @@ namespace NAudioWpfDemo.MediaFoundationEncode
 {
     internal class MediaFoundationEncodeViewModel : ViewModelBase, IDisposable
     {
-        private Dictionary<Guid, List<MediaTypeViewModel>> allMediaTypes;
+        private readonly Dictionary<Guid, List<MediaTypeViewModel>> allMediaTypes;
         private EncoderViewModel selectedOutputFormat;
         private MediaTypeViewModel selectedMediaType;
         private string inputFile;
         private string inputFormat;
         private WaveFormat inputWaveFormat;
 
-        public List<EncoderViewModel> OutputFormats { get; private set; }
+        public List<EncoderViewModel> OutputFormats { get; }
         public List<MediaTypeViewModel> SupportedMediaTypes { get; private set; }
-        public ICommand EncodeCommand { get; private set; }
-        public ICommand SelectInputFileCommand { get; private set; }
+        public ICommand EncodeCommand { get; }
+        public ICommand SelectInputFileCommand { get; }
 
         public MediaFoundationEncodeViewModel()
         {
@@ -44,6 +44,8 @@ namespace NAudioWpfDemo.MediaFoundationEncode
             OutputFormats.Add(new EncoderViewModel() { Name = "MP3", Guid = AudioSubtypes.MFAudioFormat_MP3, Extension = ".mp3" });
             OutputFormats.Add(new EncoderViewModel() { Name = "Windows Media Audio Voice", Guid = AudioSubtypes.MFAudioFormat_MSP1, Extension = ".wma" });
             OutputFormats.Add(new EncoderViewModel() { Name = "Windows Media Audio Lossless", Guid = AudioSubtypes.MFAudioFormat_WMAudio_Lossless, Extension = ".wma" });
+            OutputFormats.Add(new EncoderViewModel() { Name = "FLAC", Guid = Guid.Parse("0000f1ac-0000-0010-8000-00aa00389b71"), Extension = ".flac" });
+            OutputFormats.Add(new EncoderViewModel() { Name = "Apple Lossless (ALAC)", Guid = Guid.Parse("63616c61-0000-0010-8000-00aa00389b71"), Extension = ".m4a" });
             OutputFormats.Add(new EncoderViewModel() { Name = "Fake for testing", Guid = Guid.NewGuid(), Extension = ".xyz" });
             SelectedOutputFormat = OutputFormats[0];
         }
@@ -83,7 +85,7 @@ namespace NAudioWpfDemo.MediaFoundationEncode
 
         public string InputFile
         {
-            get { return inputFile; }
+            get => inputFile;
             set
             {
                 if (inputFile != value)
@@ -96,7 +98,7 @@ namespace NAudioWpfDemo.MediaFoundationEncode
 
         public string InputFormat
         {
-            get { return inputFormat; }
+            get => inputFormat;
             set
             {
                 if (inputFormat != value)
@@ -109,7 +111,7 @@ namespace NAudioWpfDemo.MediaFoundationEncode
 
         public EncoderViewModel SelectedOutputFormat
         {
-            get { return selectedOutputFormat; }
+            get => selectedOutputFormat;
             set { 
                 if (selectedOutputFormat != value)
                 {
@@ -161,7 +163,7 @@ namespace NAudioWpfDemo.MediaFoundationEncode
 
         public MediaTypeViewModel SelectedMediaType 
         {
-            get { return selectedMediaType; }
+            get => selectedMediaType;
             set
             {
                 if (selectedMediaType != value)

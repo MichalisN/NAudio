@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace NAudioWpfDemo
 {
     /// <summary>
-    /// Interaction logic for PolylineWaveFormControl.xaml
+    /// Interaction logic for PolygonWaveFormControl.xaml
     /// </summary>
     public partial class PolygonWaveFormControl : UserControl, IWaveFormRenderer
     {
@@ -25,16 +16,16 @@ namespace NAudioWpfDemo
         double xScale = 2;
         int blankZone = 10;
 
-        Polygon waveForm = new Polygon();
+        readonly Polygon waveForm = new Polygon();
 
         public PolygonWaveFormControl()
         {
-            this.SizeChanged += OnSizeChanged;
+            SizeChanged += OnSizeChanged;
             InitializeComponent();
-            waveForm.Stroke = this.Foreground;
+            waveForm.Stroke = Foreground;
             waveForm.StrokeThickness = 1;
             waveForm.Fill = new SolidColorBrush(Colors.Bisque);
-            mainCanvas.Children.Add(waveForm);            
+            mainCanvas.Children.Add(waveForm);
         }
         
         void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -43,8 +34,8 @@ namespace NAudioWpfDemo
             renderPosition = 0;
             ClearAllPoints();
 
-            this.yTranslate = this.ActualHeight / 2;
-            this.yScale = this.ActualHeight / 2;
+            yTranslate = ActualHeight / 2;
+            yScale = ActualHeight / 2;
         }
 
         private void ClearAllPoints()

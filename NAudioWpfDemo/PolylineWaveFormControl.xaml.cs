@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace NAudioWpfDemo
@@ -23,16 +15,16 @@ namespace NAudioWpfDemo
         double yTranslate = 40;
         double yScale = 40;
         int blankZone = 10;
-        
-        Polyline topLine = new Polyline();
-        Polyline bottomLine = new Polyline();
+
+        readonly Polyline topLine = new Polyline();
+        readonly Polyline bottomLine = new Polyline();
         
         public PolylineWaveFormControl()
         {
-            this.SizeChanged += OnSizeChanged;
+            SizeChanged += OnSizeChanged;
             InitializeComponent();
-            topLine.Stroke = this.Foreground;
-            bottomLine.Stroke = this.Foreground;
+            topLine.Stroke = Foreground;
+            bottomLine.Stroke = Foreground;
             topLine.StrokeThickness = 1;
             bottomLine.StrokeThickness = 1;
             mainCanvas.Children.Add(topLine);
@@ -45,8 +37,8 @@ namespace NAudioWpfDemo
             renderPosition = 0;
             ClearAllPoints();
 
-            this.yTranslate = this.ActualHeight / 2;
-            this.yScale = this.ActualHeight / 2;
+            yTranslate = ActualHeight / 2;
+            yScale = ActualHeight / 2;
         }
 
         private void ClearAllPoints()

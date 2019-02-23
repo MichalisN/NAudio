@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 namespace NAudioWpfDemo.MediaFoundationPlayback
 {
-    [Export(typeof(IModule))]
     class MediaFoundationPlaybackPlugin : ModuleBase
     {
         protected override UserControl CreateViewAndViewModel()
@@ -15,9 +9,6 @@ namespace NAudioWpfDemo.MediaFoundationPlayback
             return new MediaFoundationPlaybackView() { DataContext = new MediaFoundationPlaybackViewModel() };
         }
 
-        public override string Name
-        {
-            get { return "Media Foundation Playback"; }
-        }
+        public override string Name => "Media Foundation Playback";
     }
 }

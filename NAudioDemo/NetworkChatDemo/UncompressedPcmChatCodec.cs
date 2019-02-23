@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Linq;
 using NAudio.Wave;
-using System.ComponentModel.Composition;
 
 namespace NAudioDemo.NetworkChatDemo
 {
-    [Export(typeof(INetworkChatCodec))]
     class UncompressedPcmChatCodec : INetworkChatCodec
     {
         public UncompressedPcmChatCodec()
@@ -13,8 +10,8 @@ namespace NAudioDemo.NetworkChatDemo
             RecordFormat = new WaveFormat(8000, 16, 1);
         }
         
-        public string Name { get { return "PCM 8kHz 16 bit uncompressed"; } }
-        
+        public string Name => "PCM 8kHz 16 bit uncompressed";
+
         public WaveFormat RecordFormat { get; private set; }
         
         public byte[] Encode(byte[] data, int offset, int length)
@@ -31,10 +28,10 @@ namespace NAudioDemo.NetworkChatDemo
             return decoded;
         }
         
-        public int BitsPerSecond { get { return RecordFormat.AverageBytesPerSecond * 8; } }
-        
+        public int BitsPerSecond => RecordFormat.AverageBytesPerSecond * 8;
+
         public void Dispose() { }
         
-        public bool IsAvailable { get { return true; } }
+        public bool IsAvailable => true;
     }
 }

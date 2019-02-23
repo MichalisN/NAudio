@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Windows.Forms;
-using NAudio.Wave;
+using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Threading;
-using System.IO;
-using System.Diagnostics;
-using System.ComponentModel.Composition;
+using System.Windows.Forms;
+using NAudio.Wave;
 
-namespace NAudioDemo
+namespace NAudioDemo.Mp3StreamingDemo
 {
     public partial class Mp3StreamingPanel : UserControl
     {
@@ -106,6 +105,7 @@ namespace NAudioDemo
                                 // probably we have aborted download from the GUI thread
                                 break;
                             }
+                            if (frame == null) break;
                             if (decompressor == null)
                             {
                                 // don't think these details matter too much - just help ACM select the right codec
@@ -113,7 +113,8 @@ namespace NAudioDemo
                                 // until we have a frame
                                 decompressor = CreateFrameDecompressor(frame);
                                 bufferedWaveProvider = new BufferedWaveProvider(decompressor.OutputFormat);
-                                bufferedWaveProvider.BufferDuration = TimeSpan.FromSeconds(20); // allow us to get well ahead of ourselves
+                                bufferedWaveProvider.BufferDuration =
+                                    TimeSpan.FromSeconds(20); // allow us to get well ahead of ourselves
                                 //this.bufferedWaveProvider.BufferedDuration = 250;
                             }
                             int decompressed = decompressor.DecompressFrame(frame, buffer, 0);
@@ -284,7 +285,6 @@ namespace NAudioDemo
         }
     }
 
-    [Export(typeof(INAudioDemoPlugin))]
     public class Mp3StreamingPanelPlugin : INAudioDemoPlugin
     {
         public string Name

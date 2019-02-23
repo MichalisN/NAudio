@@ -18,7 +18,6 @@ namespace NAudio.Wave
         private IWaveProvider waveStream;
         private volatile PlaybackState playbackState;
         private AutoResetEvent callbackEvent;
-        private float volume = 1.0f;
 
         /// <summary>
         /// Indicates playback has stopped automatically
@@ -40,9 +39,10 @@ namespace NAudio.Wave
         /// <summary>
         /// Gets or sets the device number
         /// Should be set before a call to Init
-        /// This must be between 0 and <see>DeviceCount</see> - 1.
+        /// This must be between -1 and <see>DeviceCount</see> - 1.
+        /// -1 means stick to default device even default device is changed
         /// </summary>
-        public int DeviceNumber { get; set; }
+        public int DeviceNumber { get; set; } = -1;
 
         /// <summary>
         /// Opens a WaveOut device
@@ -58,7 +58,6 @@ namespace NAudio.Wave
             }
 
             // set default values up
-            DeviceNumber = 0;
             DesiredLatency = 300;
             NumberOfBuffers = 2;
 
@@ -187,6 +186,7 @@ namespace NAudio.Wave
             if (playbackState == PlaybackState.Playing)
             {
                 MmResult result;
+                playbackState = PlaybackState.Paused; // set this here to avoid a deadlock problem with some drivers
                 lock (waveOutLock)
                 {
                     result = WaveInterop.waveOutPause(hWaveOut);
@@ -195,7 +195,6 @@ namespace NAudio.Wave
                 {
                     throw new MmException(result, "waveOutPause");
                 }
-                playbackState = PlaybackState.Paused;
             }
         }
 
@@ -281,16 +280,17 @@ namespace NAudio.Wave
         }
 
         /// <summary>
-        /// Obsolete property
+        /// Volume for this device 1.0 is full scale
         /// </summary>
-        [Obsolete]
         public float Volume
         {
-            get { return volume; }
+            get
+            {
+                return WaveOut.GetWaveOutVolume(hWaveOut, waveOutLock);
+            }
             set
             {
                 WaveOut.SetWaveOutVolume(value, hWaveOut, waveOutLock);
-                volume = value;
             }
         }
 

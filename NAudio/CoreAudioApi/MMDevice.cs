@@ -31,7 +31,7 @@ namespace NAudio.CoreAudioApi
     /// <summary>
     /// MM Device
     /// </summary>
-    public class MMDevice
+    public class MMDevice : IDisposable
     {
         #region Variables
         private readonly IMMDevice deviceInterface;
@@ -42,45 +42,47 @@ namespace NAudio.CoreAudioApi
         #endregion
 
         #region Guids
+        // ReSharper disable InconsistentNaming
         private static Guid IID_IAudioMeterInformation = new Guid("C02216F6-8C67-4B5B-9D00-D008E73E0064");
         private static Guid IID_IAudioEndpointVolume = new Guid("5CDF2C82-841E-4546-9722-0CF74078229A");
         private static Guid IID_IAudioClient = new Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2");
         private static Guid IDD_IAudioSessionManager = new Guid("BFA971F1-4D5E-40BB-935E-967039BFBEE4");
+        // ReSharper restore InconsistentNaming
         #endregion
 
         #region Init
-        private void GetPropertyInformation()
+        /// <summary>
+        /// Initializes the device's property store.
+        /// </summary>
+        /// <param name="stgmAccess">The storage-access mode to open store for.</param>
+        /// <remarks>Administrative client is required for Write and ReadWrite modes.</remarks>
+        public void GetPropertyInformation(StorageAccessMode stgmAccess = StorageAccessMode.Read)
         {
-            IPropertyStore propstore;
-            Marshal.ThrowExceptionForHR(deviceInterface.OpenPropertyStore(StorageAccessMode.Read, out propstore));
+            Marshal.ThrowExceptionForHR(deviceInterface.OpenPropertyStore(stgmAccess, out var propstore));
             propertyStore = new PropertyStore(propstore);
         }
 
         private AudioClient GetAudioClient()
         {
-            object result;
-            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IID_IAudioClient, ClsCtx.ALL, IntPtr.Zero, out result));
+            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IID_IAudioClient, ClsCtx.ALL, IntPtr.Zero, out var result));
             return new AudioClient(result as IAudioClient);
         }
 
         private void GetAudioMeterInformation()
         {
-            object result;
-            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IID_IAudioMeterInformation, ClsCtx.ALL, IntPtr.Zero, out result));
+            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IID_IAudioMeterInformation, ClsCtx.ALL, IntPtr.Zero, out var result));
             audioMeterInformation = new AudioMeterInformation(result as IAudioMeterInformation);
         }
 
         private void GetAudioEndpointVolume()
         {
-            object result;
-            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IID_IAudioEndpointVolume, ClsCtx.ALL, IntPtr.Zero, out result));
+            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IID_IAudioEndpointVolume, ClsCtx.ALL, IntPtr.Zero, out var result));
             audioEndpointVolume = new AudioEndpointVolume(result as IAudioEndpointVolume);
         }
 
         private void GetAudioSessionManager()
         {
-            object result;
-            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IDD_IAudioSessionManager, ClsCtx.ALL, IntPtr.Zero, out result));
+            Marshal.ThrowExceptionForHR(deviceInterface.Activate(ref IDD_IAudioSessionManager, ClsCtx.ALL, IntPtr.Zero, out var result));
             audioSessionManager = new AudioSessionManager(result as IAudioSessionManager);
         }
         #endregion
@@ -89,16 +91,10 @@ namespace NAudio.CoreAudioApi
 
         /// <summary>
         /// Audio Client
+        /// Makes a new one each call to allow caller to manage when to dispose
+        /// n.b. should probably not be a property anymore
         /// </summary>
-        public AudioClient AudioClient
-        {
-            get
-            {
-                // now makes a new one each call to allow caller to manage when to dispose
-                // n.b. should probably not be a property anymore
-                return GetAudioClient();
-            }
-        }
+        public AudioClient AudioClient => GetAudioClient();
 
         /// <summary>
         /// Audio Meter Information
@@ -213,8 +209,8 @@ namespace NAudio.CoreAudioApi
                 {
                     return (string)propertyStore[PropertyKeys.PKEY_Device_IconPath].Value;
                 }
-                else
-                    return "Unknown";
+
+                return "Unknown";
             }
         }
 
@@ -225,8 +221,7 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                string result;
-                Marshal.ThrowExceptionForHR(deviceInterface.GetId(out result));
+                Marshal.ThrowExceptionForHR(deviceInterface.GetId(out var result));
                 return result;
             }
         }
@@ -238,9 +233,8 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                DataFlow result;
                 var ep = deviceInterface as IMMEndpoint;
-                ep.GetDataFlow(out result);
+                ep.GetDataFlow(out var result);
                 return result;
             }
         }
@@ -252,8 +246,7 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                DeviceState result;
-                Marshal.ThrowExceptionForHR(deviceInterface.GetState(out result));
+                Marshal.ThrowExceptionForHR(deviceInterface.GetState(out var result));
                 return result;
             }
         }
@@ -275,5 +268,22 @@ namespace NAudio.CoreAudioApi
             return FriendlyName;
         }
 
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        public void Dispose()
+        {
+            this.audioEndpointVolume?.Dispose();
+            this.audioSessionManager?.Dispose();
+            GC.SuppressFinalize(this);
+        }
+        
+        /// <summary>
+        /// Finalizer
+        /// </summary>
+        ~MMDevice()
+        {
+            Dispose();
+        }
     }
 }

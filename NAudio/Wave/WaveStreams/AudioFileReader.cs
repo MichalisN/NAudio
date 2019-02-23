@@ -1,6 +1,7 @@
 ﻿using System;
 using NAudio.Wave.SampleProviders;
 
+// ReSharper disable once CheckNamespace
 namespace NAudio.Wave
 {
     /// <summary>
@@ -14,7 +15,6 @@ namespace NAudio.Wave
     /// </summary>
     public class AudioFileReader : WaveStream, ISampleProvider
     {
-        private string fileName;
         private WaveStream readerStream; // the waveStream which we will use for all positioning
         private readonly SampleChannel sampleChannel; // sample provider that gives us most stuff we need
         private readonly int destBytesPerSample;
@@ -29,7 +29,7 @@ namespace NAudio.Wave
         public AudioFileReader(string fileName)
         {
             lockObject = new object();
-            this.fileName = fileName;
+            FileName = fileName;
             CreateReaderStream(fileName);
             sourceBytesPerSample = (readerStream.WaveFormat.BitsPerSample / 8) * readerStream.WaveFormat.Channels;
             sampleChannel = new SampleChannel(readerStream, false);
@@ -57,7 +57,7 @@ namespace NAudio.Wave
             {
                 readerStream = new Mp3FileReader(fileName);
             }
-            else if (fileName.EndsWith(".aiff"))
+            else if (fileName.EndsWith(".aiff", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".aif", StringComparison.OrdinalIgnoreCase))
             {
                 readerStream = new AiffFileReader(fileName);
             }
@@ -67,22 +67,20 @@ namespace NAudio.Wave
                 readerStream = new MediaFoundationReader(fileName);
             }
         }
+        /// <summary>
+        /// File Name
+        /// </summary>
+        public string FileName { get; }
 
         /// <summary>
         /// WaveFormat of this stream
         /// </summary>
-        public override WaveFormat WaveFormat
-        {
-            get { return sampleChannel.WaveFormat; }
-        }
+        public override WaveFormat WaveFormat => sampleChannel.WaveFormat;
 
         /// <summary>
         /// Length of this stream (in bytes)
         /// </summary>
-        public override long Length
-        {
-            get { return length; }
-        }
+        public override long Length => length;
 
         /// <summary>
         /// Position of this stream (in bytes)
@@ -156,8 +154,10 @@ namespace NAudio.Wave
         {
             if (disposing)
             {
-                readerStream.Dispose();
-                readerStream = null;
+                if (readerStream != null) {
+                    readerStream.Dispose();
+                    readerStream = null;
+                }
             }
             base.Dispose(disposing);
         }

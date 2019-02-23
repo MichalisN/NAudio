@@ -86,12 +86,14 @@
     <Compile Include="Acm\WaveFormatConversionStreamTests.cs" />
     <Compile Include="Aiff\AiffReaderTests.cs" />
     <Compile Include="DirectSound\DirectSoundTests.cs" />
+    <Compile Include="Dmo\DmoEffectorTests.cs" />
     <Compile Include="Dmo\DmoMp3FrameDecompressorTests.cs" />
     <Compile Include="Dmo\DmoTests.cs" />
     <Compile Include="Dmo\ResamplerDmoStreamTests.cs" />
     <Compile Include="Dmo\ResamplerDmoTests.cs" />
     <Compile Include="MediaFoundation\MediaFoundationReaderTests.cs" />
     <Compile Include="Midi\MidiEventCollectionTest.cs" />
+    <Compile Include="Midi\MidiEventCloneTests.cs" />
     <Compile Include="Midi\PitchWheelChangeEventTests.cs" />
     <Compile Include="Mixer\MixerApiTests.cs" />
     <Compile Include="Mp3\Mp3FileReaderTests.cs" />
@@ -103,22 +105,28 @@
     <Compile Include="Utils\NullWaveStream.cs" />
     <Compile Include="Utils\OSUtils.cs" />
     <Compile Include="Utils\SampleProviderTestHelpers.cs" />
+    <Compile Include="Utils\TestFileBuilder.cs" />
     <Compile Include="Wasapi\AudioClientTests.cs" />
     <Compile Include="Wasapi\MMDeviceEnumeratorTests.cs" />
     <Compile Include="WaveFormats\AdpcmWaveFormatTests.cs" />
     <Compile Include="WaveIn\WaveInDevicesTests.cs" />
+    <Compile Include="WaveStreams\AudioFileReaderTests.cs" />
     <Compile Include="WaveStreams\BlockAlignmentReductionStreamTests.cs" />
     <Compile Include="WaveStreams\BufferedWaveProviderTests.cs" />
     <Compile Include="WaveStreams\CircularBufferTests.cs" />
+    <Compile Include="WaveStreams\ConcatenatingSampleProviderTests.cs" />
     <Compile Include="WaveStreams\FadeInOutSampleProviderTests.cs" />
     <Compile Include="WaveStreams\ChunkIdentifierTests.cs" />
     <Compile Include="WaveStreams\MixingSampleProviderTests.cs" />
     <Compile Include="WaveStreams\MonoToStereoProvider16Tests.cs" />
+    <Compile Include="WaveStreams\MonoToStereoSampleProviderTests.cs" />
     <Compile Include="WaveStreams\MultiplexingSampleProviderTests.cs" />
     <Compile Include="WaveStreams\MultiplexingWaveProviderTests.cs" />
     <Compile Include="WaveStreams\OffsetSampleProviderTests.cs" />
     <Compile Include="WaveStreams\SampleToWaveProvider24Tests.cs" />
+    <Compile Include="WaveStreams\SilenceProviderTests.cs" />
     <Compile Include="WaveStreams\StereoToMonoProvider16Tests.cs" />
+    <Compile Include="WaveStreams\StereoToMonoSampleProviderTests.cs" />
     <Compile Include="WaveStreams\TestSampleProvider.cs" />
     <Compile Include="WaveStreams\TestWaveProvider.cs" />
     <Compile Include="WaveStreams\VolumeWaveProvider16Tests.cs" />
@@ -126,20 +134,14 @@
     <Compile Include="WaveStreams\WaveFileReaderTests.cs" />
     <Compile Include="WaveStreams\WaveFileWriterTests.cs" />
     <Compile Include="WaveStreams\WdlResamplingSampleProviderTests.cs" />
-    <Compile Include="WindowsMedia\WindowsMediaTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NAudio.WindowsMediaFormat\NAudio.WindowsMediaFormat.csproj">
-      <Project>{1868FC77-FD6F-4881-9CF5-DE7451806BFA}</Project>
-      <Name>NAudio.WindowsMediaFormat</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NAudio\NAudio.csproj">
       <Project>{DA4F02E3-0B5E-42CD-B8D9-5583FA51D66E}</Project>
       <Name>NAudio</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="NAudioTests.nunit" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

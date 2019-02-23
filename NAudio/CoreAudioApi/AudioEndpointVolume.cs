@@ -32,11 +32,17 @@ namespace NAudio.CoreAudioApi
     public class AudioEndpointVolume : IDisposable
     {
         private readonly IAudioEndpointVolume audioEndPointVolume;
-        private readonly AudioEndpointVolumeChannels channels;
-        private readonly AudioEndpointVolumeStepInformation stepInformation;
-        private readonly AudioEndpointVolumeVolumeRange volumeRange;
-        private readonly EEndpointHardwareSupport hardwareSupport;
         private AudioEndpointVolumeCallback callBack;
+
+        private Guid notificationGuid = Guid.Empty;
+
+        /// <summary>
+        /// GUID to pass to AudioEndpointVolumeCallback
+        /// </summary>
+        public Guid NotificationGuid {
+            get => notificationGuid;
+            set => notificationGuid = value;
+        }
 
         /// <summary>
         /// On Volume Notification
@@ -46,46 +52,22 @@ namespace NAudio.CoreAudioApi
         /// <summary>
         /// Volume Range
         /// </summary>
-        public AudioEndpointVolumeVolumeRange VolumeRange
-        {
-            get
-            {
-                return volumeRange;
-            }
-        }
+        public AudioEndpointVolumeVolumeRange VolumeRange { get; }
 
         /// <summary>
         /// Hardware Support
         /// </summary>
-        public EEndpointHardwareSupport HardwareSupport
-        {
-            get
-            {
-                return hardwareSupport;
-            }
-        }
+        public EEndpointHardwareSupport HardwareSupport { get; }
 
         /// <summary>
         /// Step Information
         /// </summary>
-        public AudioEndpointVolumeStepInformation StepInformation
-        {
-            get
-            {
-                return stepInformation;
-            }
-        }
+        public AudioEndpointVolumeStepInformation StepInformation { get; }
 
         /// <summary>
         /// Channels
         /// </summary>
-        public AudioEndpointVolumeChannels Channels
-        {
-            get
-            {
-                return channels;
-            }
-        }
+        public AudioEndpointVolumeChannels Channels { get; }
 
         /// <summary>
         /// Master Volume Level
@@ -94,13 +76,12 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                float result;
-                Marshal.ThrowExceptionForHR(audioEndPointVolume.GetMasterVolumeLevel(out result));
+                Marshal.ThrowExceptionForHR(audioEndPointVolume.GetMasterVolumeLevel(out var result));
                 return result;
             }
             set
             {
-                Marshal.ThrowExceptionForHR(audioEndPointVolume.SetMasterVolumeLevel(value, Guid.Empty));
+                Marshal.ThrowExceptionForHR(audioEndPointVolume.SetMasterVolumeLevel(value, ref notificationGuid));
             }
         }
 
@@ -111,13 +92,12 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                float result;
-                Marshal.ThrowExceptionForHR(audioEndPointVolume.GetMasterVolumeLevelScalar(out result));
+                Marshal.ThrowExceptionForHR(audioEndPointVolume.GetMasterVolumeLevelScalar(out var result));
                 return result;
             }
             set
             {
-                Marshal.ThrowExceptionForHR(audioEndPointVolume.SetMasterVolumeLevelScalar(value, Guid.Empty));
+                Marshal.ThrowExceptionForHR(audioEndPointVolume.SetMasterVolumeLevelScalar(value, ref notificationGuid));
             }
         }
 
@@ -128,13 +108,12 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                bool result;
-                Marshal.ThrowExceptionForHR(audioEndPointVolume.GetMute(out result));
+                Marshal.ThrowExceptionForHR(audioEndPointVolume.GetMute(out var result));
                 return result;
             }
             set
             {
-                Marshal.ThrowExceptionForHR(audioEndPointVolume.SetMute(value, Guid.Empty));
+                Marshal.ThrowExceptionForHR(audioEndPointVolume.SetMute(value, ref notificationGuid));
             }
         }
 
@@ -143,7 +122,7 @@ namespace NAudio.CoreAudioApi
         /// </summary>
         public void VolumeStepUp()
         {
-            Marshal.ThrowExceptionForHR(audioEndPointVolume.VolumeStepUp(Guid.Empty));
+            Marshal.ThrowExceptionForHR(audioEndPointVolume.VolumeStepUp(ref notificationGuid));
         }
 
         /// <summary>
@@ -151,7 +130,7 @@ namespace NAudio.CoreAudioApi
         /// </summary>
         public void VolumeStepDown()
         {
-            Marshal.ThrowExceptionForHR(audioEndPointVolume.VolumeStepDown(Guid.Empty));
+            Marshal.ThrowExceptionForHR(audioEndPointVolume.VolumeStepDown(ref notificationGuid));
         }
 
         /// <summary>
@@ -160,25 +139,19 @@ namespace NAudio.CoreAudioApi
         /// <param name="realEndpointVolume">IAudioEndpointVolume COM interface</param>
         internal AudioEndpointVolume(IAudioEndpointVolume realEndpointVolume)
         {
-            uint hardwareSupp;
-
             audioEndPointVolume = realEndpointVolume;
-            channels = new AudioEndpointVolumeChannels(audioEndPointVolume);
-            stepInformation = new AudioEndpointVolumeStepInformation(audioEndPointVolume);
-            Marshal.ThrowExceptionForHR(audioEndPointVolume.QueryHardwareSupport(out hardwareSupp));
-            hardwareSupport = (EEndpointHardwareSupport)hardwareSupp;
-            volumeRange = new AudioEndpointVolumeVolumeRange(audioEndPointVolume);
+            Channels = new AudioEndpointVolumeChannels(audioEndPointVolume);
+            StepInformation = new AudioEndpointVolumeStepInformation(audioEndPointVolume);
+            Marshal.ThrowExceptionForHR(audioEndPointVolume.QueryHardwareSupport(out var hardwareSupp));
+            HardwareSupport = (EEndpointHardwareSupport)hardwareSupp;
+            VolumeRange = new AudioEndpointVolumeVolumeRange(audioEndPointVolume);
             callBack = new AudioEndpointVolumeCallback(this);
             Marshal.ThrowExceptionForHR(audioEndPointVolume.RegisterControlChangeNotify(callBack));
         }
         
         internal void FireNotification(AudioVolumeNotificationData notificationData)
         {
-            AudioEndpointVolumeNotificationDelegate del = OnVolumeNotification;
-            if (del != null)
-            {
-                del(notificationData);
-            }
+            OnVolumeNotification?.Invoke(notificationData);
         }
         #region IDisposable Members
 
@@ -192,8 +165,8 @@ namespace NAudio.CoreAudioApi
                 Marshal.ThrowExceptionForHR(audioEndPointVolume.UnregisterControlChangeNotify(callBack));
                 callBack = null;
             }
+            Marshal.ReleaseComObject(audioEndPointVolume);
             GC.SuppressFinalize(this);
-
         }
         
         /// <summary>

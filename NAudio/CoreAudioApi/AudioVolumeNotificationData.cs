@@ -28,51 +28,35 @@ namespace NAudio.CoreAudioApi
     /// </summary>
     public class AudioVolumeNotificationData
     {
-        private readonly Guid eventContext;
-        private readonly bool muted;
-        private readonly float masterVolume;
-        private readonly int channels;
-        private readonly float[] channelVolume;
-
         /// <summary>
         /// Event Context
         /// </summary>
-        public Guid EventContext
-        {
-            get { return eventContext; }
-        }
+        public Guid EventContext { get; }
 
         /// <summary>
         /// Muted
         /// </summary>
-        public bool Muted
-        {
-            get { return muted; }
-        }
+        public bool Muted { get; }
+
+        /// <summary>
+        /// Guid that raised the event
+        /// </summary>
+        public Guid Guid { get; }
 
         /// <summary>
         /// Master Volume
         /// </summary>
-        public float MasterVolume
-        {
-            get { return masterVolume; }
-        }
+        public float MasterVolume { get; }
 
         /// <summary>
         /// Channels
         /// </summary>
-        public int Channels
-        {
-            get { return channels; }
-        }
+        public int Channels { get; }
 
         /// <summary>
         /// Channel Volume
         /// </summary>
-        public float[] ChannelVolume
-        {
-            get { return channelVolume; }
-        }
+        public float[] ChannelVolume { get; }
 
         /// <summary>
         /// Audio Volume Notification Data
@@ -81,13 +65,15 @@ namespace NAudio.CoreAudioApi
         /// <param name="muted"></param>
         /// <param name="masterVolume"></param>
         /// <param name="channelVolume"></param>
-        public AudioVolumeNotificationData(Guid eventContext, bool muted, float masterVolume, float[] channelVolume)
+        /// <param name="guid"></param>
+        public AudioVolumeNotificationData(Guid eventContext, bool muted, float masterVolume, float[] channelVolume, Guid guid)
         {
-            this.eventContext = eventContext;
-            this.muted = muted;
-            this.masterVolume = masterVolume;
-            channels = channelVolume.Length;
-            this.channelVolume = channelVolume;
+            EventContext = eventContext;
+            Muted = muted;
+            MasterVolume = masterVolume;
+            Channels = channelVolume.Length;
+            ChannelVolume = channelVolume;
+            Guid = guid;
         }
     }
 }

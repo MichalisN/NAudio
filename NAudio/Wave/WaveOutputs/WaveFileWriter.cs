@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using NAudio.Wave.SampleProviders;
+using NAudio.Utils;
 
+// ReSharper disable once CheckNamespace
 namespace NAudio.Wave
 {
     /// <summary>
@@ -39,7 +41,6 @@ namespace NAudio.Wave
         {
             using (var writer = new WaveFileWriter(filename, sourceProvider.WaveFormat))
             {
-                long outputLength = 0;
                 var buffer = new byte[sourceProvider.WaveFormat.AverageBytesPerSecond * 4];
                 while (true)
                 {
@@ -49,13 +50,39 @@ namespace NAudio.Wave
                         // end of source provider
                         break;
                     }
-                    outputLength += bytesRead;
                     // Write will throw exception if WAV file becomes too large
                     writer.Write(buffer, 0, bytesRead);
                 }
             }
         }
+        
+        /// <summary>
+        /// Writes to a stream by reading all the data from a WaveProvider
+        /// BEWARE: the WaveProvider MUST return 0 from its Read method when it is finished,
+        /// or the Wave File will grow indefinitely.
+        /// </summary>
+        /// <param name="outStream">The stream the method will output to</param>
+        /// <param name="sourceProvider">The source WaveProvider</param>
+        public static void WriteWavFileToStream(Stream outStream, IWaveProvider sourceProvider)
+        {
+            using (var writer = new WaveFileWriter(new IgnoreDisposeStream(outStream), sourceProvider.WaveFormat)) 
+            {
+                var buffer = new byte[sourceProvider.WaveFormat.AverageBytesPerSecond * 4];
+                while(true) 
+                {
+                    var bytesRead = sourceProvider.Read(buffer, 0, buffer.Length);
+                    if (bytesRead == 0) 
+                    {
+                        // end of source provider
+                        outStream.Flush();
+                        break;
+                    }
 
+                    writer.Write(buffer, 0, bytesRead);
+                }
+            }
+        }
+        
         /// <summary>
         /// WaveFileWriter that actually writes to a stream
         /// </summary>
@@ -65,13 +92,13 @@ namespace NAudio.Wave
         {
             this.outStream = outStream;
             this.format = format;
-            this.writer = new BinaryWriter(outStream, System.Text.Encoding.UTF8);
-            this.writer.Write(System.Text.Encoding.UTF8.GetBytes("RIFF"));
-            this.writer.Write((int)0); // placeholder
-            this.writer.Write(System.Text.Encoding.UTF8.GetBytes("WAVE"));
+            writer = new BinaryWriter(outStream, System.Text.Encoding.UTF8);
+            writer.Write(System.Text.Encoding.UTF8.GetBytes("RIFF"));
+            writer.Write((int)0); // placeholder
+            writer.Write(System.Text.Encoding.UTF8.GetBytes("WAVE"));
 
-            this.writer.Write(System.Text.Encoding.UTF8.GetBytes("fmt "));
-            format.Serialize(this.writer);
+            writer.Write(System.Text.Encoding.UTF8.GetBytes("fmt "));
+            format.Serialize(writer);
 
             CreateFactChunk();
             WriteDataChunkHeader();
@@ -90,19 +117,19 @@ namespace NAudio.Wave
 
         private void WriteDataChunkHeader()
         {
-            this.writer.Write(System.Text.Encoding.UTF8.GetBytes("data"));
-            dataSizePos = this.outStream.Position;
-            this.writer.Write((int)0); // placeholder
+            writer.Write(System.Text.Encoding.UTF8.GetBytes("data"));
+            dataSizePos = outStream.Position;
+            writer.Write((int)0); // placeholder
         }
 
         private void CreateFactChunk()
         {
             if (HasFactChunk())
             {
-                this.writer.Write(System.Text.Encoding.UTF8.GetBytes("fact"));
-                this.writer.Write((int)4);
-                factSampleCountPos = this.outStream.Position;
-                this.writer.Write((int)0); // number of samples
+                writer.Write(System.Text.Encoding.UTF8.GetBytes("fact"));
+                writer.Write((int)4);
+                factSampleCountPos = outStream.Position;
+                writer.Write((int)0); // number of samples
             }
         }
 
@@ -115,50 +142,37 @@ namespace NAudio.Wave
         /// <summary>
         /// The wave file name or null if not applicable
         /// </summary>
-        public string Filename
-        {
-            get { return filename; }
-        }
+        public string Filename => filename;
 
         /// <summary>
         /// Number of bytes of audio in the data chunk
         /// </summary>
-        public override long Length
-        {
-            get { return dataChunkSize; }
-        }
+        public override long Length => dataChunkSize;
+
+        /// <summary>
+        /// Total time (calculated from Length and average bytes per second)
+        /// </summary>
+        public TimeSpan TotalTime => TimeSpan.FromSeconds((double)Length / WaveFormat.AverageBytesPerSecond);
 
         /// <summary>
         /// WaveFormat of this wave file
         /// </summary>
-        public WaveFormat WaveFormat
-        {
-            get { return format; }
-        }
+        public WaveFormat WaveFormat => format;
 
         /// <summary>
         /// Returns false: Cannot read from a WaveFileWriter
         /// </summary>
-        public override bool CanRead
-        {
-            get { return false; }
-        }
+        public override bool CanRead => false;
 
         /// <summary>
         /// Returns true: Can write to a WaveFileWriter
         /// </summary>
-        public override bool CanWrite
-        {
-            get { return true; }
-        }
+        public override bool CanWrite => true;
 
         /// <summary>
         /// Returns false: Cannot seek within a WaveFileWriter
         /// </summary>
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek => false;
 
         /// <summary>
         /// Read is not supported for a WaveFileWriter
@@ -190,8 +204,8 @@ namespace NAudio.Wave
         /// </summary>
         public override long Position
         {
-            get { return dataChunkSize; }
-            set { throw new InvalidOperationException("Repositioning a WaveFileWriter is not supported"); }
+            get => dataChunkSize;
+            set => throw new InvalidOperationException("Repositioning a WaveFileWriter is not supported");
         }
 
         /// <summary>
@@ -215,7 +229,7 @@ namespace NAudio.Wave
         public override void Write(byte[] data, int offset, int count)
         {
             if (outStream.Length + count > UInt32.MaxValue)
-                throw new ArgumentException("WAV file too large", "count");
+                throw new ArgumentException("WAV file too large", nameof(count));
             outStream.Write(data, offset, count);
             dataChunkSize += count;
         }
@@ -296,7 +310,7 @@ namespace NAudio.Wave
         {
             // 16 bit PCM data
             if (WaveFormat.BitsPerSample == 16)
-            {                
+            {
                 for (int sample = 0; sample < count; sample++)
                 {
                     writer.Write(samples[sample + offset]);
@@ -306,10 +320,9 @@ namespace NAudio.Wave
             // 24 bit PCM data
             else if (WaveFormat.BitsPerSample == 24)
             {
-                byte[] value;
                 for (int sample = 0; sample < count; sample++)
                 {
-                    value = BitConverter.GetBytes(UInt16.MaxValue * (Int32)samples[sample + offset]);
+                    var value = BitConverter.GetBytes(UInt16.MaxValue * (Int32)samples[sample + offset]);
                     value24[0] = value[1];
                     value24[1] = value[2];
                     value24[2] = value[3];
@@ -343,6 +356,7 @@ namespace NAudio.Wave
 
         /// <summary>
         /// Ensures data is written to disk
+        /// Also updates header, so that WAV file will be valid up to the point currently written
         /// </summary>
         public override void Flush()
         {

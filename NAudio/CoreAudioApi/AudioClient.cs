@@ -1,6 +1,7 @@
 ﻿using System;
 using NAudio.CoreAudioApi.Interfaces;
 using System.Runtime.InteropServices;
+using NAudio.Utils;
 using NAudio.Wave;
 
 namespace NAudio.CoreAudioApi
@@ -33,8 +34,7 @@ namespace NAudio.CoreAudioApi
             {
                 if (mixFormat == null)
                 {
-                    IntPtr waveFormatPointer;
-                    Marshal.ThrowExceptionForHR(audioClientInterface.GetMixFormat(out waveFormatPointer));
+                    Marshal.ThrowExceptionForHR(audioClientInterface.GetMixFormat(out var waveFormatPointer));
                     var waveFormat = WaveFormat.MarshalFromPtr(waveFormatPointer);
                     Marshal.FreeCoTaskMem(waveFormatPointer);
                     mixFormat = waveFormat;
@@ -82,13 +82,7 @@ namespace NAudio.CoreAudioApi
         /// <summary>
         /// Retrieves the maximum latency for the current stream and can be called any time after the stream has been initialized.
         /// </summary>
-        public long StreamLatency
-        {
-            get
-            {
-                return audioClientInterface.GetStreamLatency();
-            }
-        }
+        public long StreamLatency => audioClientInterface.GetStreamLatency();
 
         /// <summary>
         /// Retrieves the number of frames of padding in the endpoint buffer (must initialize first)
@@ -97,8 +91,7 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                int currentPadding;
-                Marshal.ThrowExceptionForHR(audioClientInterface.GetCurrentPadding(out currentPadding));
+                Marshal.ThrowExceptionForHR(audioClientInterface.GetCurrentPadding(out var currentPadding));
                 return currentPadding;
             }
         }
@@ -111,9 +104,7 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                long defaultDevicePeriod;
-                long minimumDevicePeriod;
-                Marshal.ThrowExceptionForHR(audioClientInterface.GetDevicePeriod(out defaultDevicePeriod, out minimumDevicePeriod));
+                Marshal.ThrowExceptionForHR(audioClientInterface.GetDevicePeriod(out var defaultDevicePeriod, out _));
                 return defaultDevicePeriod;
             }
         }
@@ -126,9 +117,7 @@ namespace NAudio.CoreAudioApi
         {
             get
             {
-                long defaultDevicePeriod;
-                long minimumDevicePeriod;
-                Marshal.ThrowExceptionForHR(audioClientInterface.GetDevicePeriod(out defaultDevicePeriod, out minimumDevicePeriod));
+                Marshal.ThrowExceptionForHR(audioClientInterface.GetDevicePeriod(out _, out var minimumDevicePeriod));
                 return minimumDevicePeriod;
             }
         }
@@ -157,9 +146,8 @@ namespace NAudio.CoreAudioApi
                 }
                 if (audioStreamVolume == null)
                 {
-                    object audioStreamVolumeInterface;
                     var audioStreamVolumeGuid = new Guid("93014887-242D-4068-8A15-CF5E93B90FE3");
-                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioStreamVolumeGuid, out audioStreamVolumeInterface));
+                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioStreamVolumeGuid, out var audioStreamVolumeInterface));
                     audioStreamVolume = new AudioStreamVolume((IAudioStreamVolume)audioStreamVolumeInterface);
                 }
                 return audioStreamVolume;
@@ -175,9 +163,8 @@ namespace NAudio.CoreAudioApi
             {
                 if (audioClockClient == null)
                 {
-                    object audioClockClientInterface;
                     var audioClockClientGuid = new Guid("CD63314F-3FBA-4a1b-812C-EF96358728E7");
-                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioClockClientGuid, out audioClockClientInterface));
+                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioClockClientGuid, out var audioClockClientInterface));
                     audioClockClient = new AudioClockClient((IAudioClock)audioClockClientInterface);
                 }
                 return audioClockClient;
@@ -193,9 +180,8 @@ namespace NAudio.CoreAudioApi
             {
                 if (audioRenderClient == null)
                 {
-                    object audioRenderClientInterface;
                     var audioRenderClientGuid = new Guid("F294ACFC-3146-4483-A7BF-ADDCA7C260E2");
-                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioRenderClientGuid, out audioRenderClientInterface));
+                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioRenderClientGuid, out var audioRenderClientInterface));
                     audioRenderClient = new AudioRenderClient((IAudioRenderClient)audioRenderClientInterface);
                 }
                 return audioRenderClient;
@@ -211,9 +197,8 @@ namespace NAudio.CoreAudioApi
             {
                 if (audioCaptureClient == null)
                 {
-                    object audioCaptureClientInterface;
                     var audioCaptureClientGuid = new Guid("c8adbd64-e71e-48a0-a4de-185c395cd317");
-                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioCaptureClientGuid, out audioCaptureClientInterface));
+                    Marshal.ThrowExceptionForHR(audioClientInterface.GetService(audioCaptureClientGuid, out var audioCaptureClientInterface));
                     audioCaptureClient = new AudioCaptureClient((IAudioCaptureClient)audioCaptureClientInterface);
                 }
                 return audioCaptureClient;
@@ -229,8 +214,12 @@ namespace NAudio.CoreAudioApi
         public bool IsFormatSupported(AudioClientShareMode shareMode,
             WaveFormat desiredFormat)
         {
-            WaveFormatExtensible closestMatchFormat;
-            return IsFormatSupported(shareMode, desiredFormat, out closestMatchFormat);
+            return IsFormatSupported(shareMode, desiredFormat, out _);
+        }
+
+        private IntPtr GetPointerToPointer()
+        {
+            return Marshal.AllocHGlobal(MarshalHelpers.SizeOf<IntPtr>());
         }
 
         /// <summary>
@@ -242,10 +231,22 @@ namespace NAudio.CoreAudioApi
         /// <returns>True if the format is supported</returns>
         public bool IsFormatSupported(AudioClientShareMode shareMode, WaveFormat desiredFormat, out WaveFormatExtensible closestMatchFormat)
         {
-            int hresult = audioClientInterface.IsFormatSupported(shareMode, desiredFormat, out closestMatchFormat);
+            IntPtr pointerToPtr = GetPointerToPointer(); // IntPtr.Zero; // Marshal.AllocHGlobal(Marshal.SizeOf<WaveFormatExtensible>());
+            closestMatchFormat = null;
+            int hresult = audioClientInterface.IsFormatSupported(shareMode, desiredFormat, pointerToPtr);
+
+            var closestMatchPtr = MarshalHelpers.PtrToStructure<IntPtr>(pointerToPtr);
+
+            if (closestMatchPtr != IntPtr.Zero)
+            {
+                closestMatchFormat = MarshalHelpers.PtrToStructure<WaveFormatExtensible>(closestMatchPtr);
+                Marshal.FreeCoTaskMem(closestMatchPtr);
+            }
+            Marshal.FreeHGlobal(pointerToPtr);
             // S_OK is 0, S_FALSE = 1
             if (hresult == 0)
             {
+
                 // directly supported
                 return true;
             }
@@ -255,7 +256,10 @@ namespace NAudio.CoreAudioApi
             }
             if (hresult == (int)AudioClientErrors.UnsupportedFormat)
             {
-                return false;
+                // documentation is confusing as to what this flag means
+                // https://docs.microsoft.com/en-us/windows/desktop/api/audioclient/nf-audioclient-iaudioclient-isformatsupported
+                // "Succeeded but the specified format is not supported in exclusive mode."
+                return false; // shareMode != AudioClientShareMode.Exclusive;
             }
             Marshal.ThrowExceptionForHR(hresult);
             // shouldn't get here

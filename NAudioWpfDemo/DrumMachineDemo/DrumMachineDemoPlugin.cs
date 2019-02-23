@@ -1,20 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel.Composition;
-
-namespace NAudioWpfDemo.DrumMachineDemo
+﻿namespace NAudioWpfDemo.DrumMachineDemo
 {
-    [Export(typeof(IModule))]
     class DrumMachineDemoPlugin : IModule
     {
         private DrumMachineDemoView view;
         private DrumMachineDemoViewModel viewModel;
-        public string Name
-        {
-            get { return "Drum Machine"; }
-        }
+
+        public string Name => "Drum Machine";
 
         public System.Windows.Controls.UserControl UserInterface
         {
@@ -32,12 +23,9 @@ namespace NAudioWpfDemo.DrumMachineDemo
 
         public void Deactivate()
         {
-            if (view != null)
-            {
-                viewModel.Dispose();
-                view = null;
-                viewModel = null;
-            }
+            viewModel?.Dispose();
+            view = null;
+            viewModel = null;
         }
     }
 }

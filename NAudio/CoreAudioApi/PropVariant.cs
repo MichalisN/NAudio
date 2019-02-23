@@ -23,6 +23,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using NAudio.Utils;
 
 namespace NAudio.CoreAudioApi.Interfaces
 {
@@ -34,35 +35,98 @@ namespace NAudio.CoreAudioApi.Interfaces
     [StructLayout(LayoutKind.Explicit)]
     public struct PropVariant
     {
-        [FieldOffset(0)] private short vt;
-        [FieldOffset(2)] private short wReserved1;
-        [FieldOffset(4)] private short wReserved2;
-        [FieldOffset(6)] private short wReserved3;
-        [FieldOffset(8)] private sbyte cVal;
-        [FieldOffset(8)] private byte bVal;
-        [FieldOffset(8)] private short iVal;
-        [FieldOffset(8)] private ushort uiVal;
-        [FieldOffset(8)] private int lVal;
-        [FieldOffset(8)] private uint ulVal;
-        [FieldOffset(8)] private int intVal;
-        [FieldOffset(8)] private uint uintVal;
-        [FieldOffset(8)] private long hVal;
-        [FieldOffset(8)] private long uhVal;
-        [FieldOffset(8)] private float fltVal;
-        [FieldOffset(8)] private double dblVal;
+        /// <summary>
+        /// Value type tag.
+        /// </summary>
+        [FieldOffset(0)] public short vt;
+        /// <summary>
+        /// Reserved1.
+        /// </summary>
+        [FieldOffset(2)] public short wReserved1;
+        /// <summary>
+        /// Reserved2.
+        /// </summary>
+        [FieldOffset(4)] public short wReserved2;
+        /// <summary>
+        /// Reserved3.
+        /// </summary>
+        [FieldOffset(6)] public short wReserved3;
+        /// <summary>
+        /// cVal.
+        /// </summary>
+        [FieldOffset(8)] public sbyte cVal;
+        /// <summary>
+        /// bVal.
+        /// </summary>
+        [FieldOffset(8)] public byte bVal;
+        /// <summary>
+        /// iVal.
+        /// </summary>
+        [FieldOffset(8)] public short iVal;
+        /// <summary>
+        /// uiVal.
+        /// </summary>
+        [FieldOffset(8)] public ushort uiVal;
+        /// <summary>
+        /// lVal.
+        /// </summary>
+        [FieldOffset(8)] public int lVal;
+        /// <summary>
+        /// ulVal.
+        /// </summary>
+        [FieldOffset(8)] public uint ulVal;
+        /// <summary>
+        /// intVal.
+        /// </summary>
+        [FieldOffset(8)] public int intVal;
+        /// <summary>
+        /// uintVal.
+        /// </summary>
+        [FieldOffset(8)] public uint uintVal;
+        /// <summary>
+        /// hVal.
+        /// </summary>
+        [FieldOffset(8)] public long hVal;
+        /// <summary>
+        /// uhVal.
+        /// </summary>
+        [FieldOffset(8)] public long uhVal;
+        /// <summary>
+        /// fltVal.
+        /// </summary>
+        [FieldOffset(8)] public float fltVal;
+        /// <summary>
+        /// dblVal.
+        /// </summary>
+        [FieldOffset(8)] public double dblVal;
         //VARIANT_BOOL boolVal;
-        [FieldOffset(8)] private short boolVal;
-        [FieldOffset(8)] private int scode;
+        /// <summary>
+        /// boolVal.
+        /// </summary>
+        [FieldOffset(8)] public short boolVal;
+        /// <summary>
+        /// scode.
+        /// </summary>
+        [FieldOffset(8)] public int scode;
         //CY cyVal;
-        [FieldOffset(8)] private DateTime date;
-        [FieldOffset(8)] private System.Runtime.InteropServices.ComTypes.FILETIME filetime;
+        //[FieldOffset(8)] private DateTime date; - can cause issues with invalid value
+        /// <summary>
+        /// Date time.
+        /// </summary>
+        [FieldOffset(8)] public System.Runtime.InteropServices.ComTypes.FILETIME filetime;
         //CLSID* puuid;
         //CLIPDATA* pclipdata;
         //BSTR bstrVal;
         //BSTRBLOB bstrblobVal;
-        [FieldOffset(8)] private Blob blobVal;
+        /// <summary>
+        /// Binary large object.
+        /// </summary>
+        [FieldOffset(8)] public Blob blobVal;
         //LPSTR pszVal;
-        [FieldOffset(8)] private IntPtr pointerValue; //LPWSTR 
+        /// <summary>
+        /// Pointer value.
+        /// </summary>
+        [FieldOffset(8)] public IntPtr pointerValue; //LPWSTR 
         //IUnknown* punkVal;
         /*IDispatch* pdispVal;
         IStream* pStream;
@@ -156,12 +220,9 @@ namespace NAudio.CoreAudioApi.Interfaces
         /// <summary>
         /// Gets the type of data in this PropVariant
         /// </summary>
-        public VarEnum DataType
-        {
-            get { return (VarEnum) vt; }
-        }
+        public VarEnum DataType => (VarEnum) vt;
 
-    /// <summary>
+        /// <summary>
         /// Property value
         /// </summary>
         public object Value
@@ -191,7 +252,7 @@ namespace NAudio.CoreAudioApi.Interfaces
                     case VarEnum.VT_VECTOR | VarEnum.VT_UI1:
                         return GetBlob();
                     case VarEnum.VT_CLSID:
-                        return (Guid)Marshal.PtrToStructure(pointerValue, typeof(Guid));
+                        return MarshalHelpers.PtrToStructure<Guid>(pointerValue);
                     case VarEnum.VT_BOOL:
                         switch (boolVal)
                         {
@@ -202,20 +263,28 @@ namespace NAudio.CoreAudioApi.Interfaces
                             default:
                                 throw new NotSupportedException("PropVariant VT_BOOL must be either -1 or 0");
                         }
+                    case VarEnum.VT_FILETIME:
+                        return DateTime.FromFileTime((((long)filetime.dwHighDateTime) << 32) + filetime.dwLowDateTime);
                 }
-                throw new NotImplementedException("PropVariant " + ve.ToString());
+                throw new NotImplementedException("PropVariant " + ve);
             }
         }
 
         /// <summary>
         /// allows freeing up memory, might turn this into a Dispose method?
         /// </summary>
+        [Obsolete("Call with pointer instead")]
         public void Clear()
         {
-            PropVariantClear(ref this);
+            PropVariantNative.PropVariantClear(ref this);
         }
 
-        [DllImport("ole32.dll")]
-        private static extern int PropVariantClear(ref PropVariant pvar);
+        /// <summary>
+        /// Clears with a known pointer
+        /// </summary>
+        public static void Clear(IntPtr ptr)
+        {
+            PropVariantNative.PropVariantClear(ptr);
+        }
     }
 }

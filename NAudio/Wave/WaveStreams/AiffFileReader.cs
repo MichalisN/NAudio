@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
 using NAudio.Utils;
 
+// ReSharper disable once CheckNamespace
 namespace NAudio.Wave
 {
     /// <summary>A read-only stream of AIFF data based on an aiff file
@@ -37,7 +37,7 @@ namespace NAudio.Wave
         /// <param name="inputStream">The input stream containing a AIF file including header</param>
         public AiffFileReader(Stream inputStream)
         {
-            this.waveStream = inputStream;
+            waveStream = inputStream;
             ReadAiffHeader(waveStream, out waveFormat, out dataPosition, out dataChunkLength, chunks);
             Position = 0;
         }
@@ -72,6 +72,12 @@ namespace NAudio.Wave
             while (br.BaseStream.Position < br.BaseStream.Length)
             {
                 AiffChunk nextChunk = ReadChunkHeader(br);
+                if (nextChunk.ChunkName == "\0\0\0\0") break;
+
+                if (br.BaseStream.Position + nextChunk.ChunkLength > br.BaseStream.Length)
+                {
+                    break;
+                }
                 if (nextChunk.ChunkName == "COMM")
                 {
                     short numChannels = ConvertShort(br.ReadBytes(2));
@@ -96,8 +102,7 @@ namespace NAudio.Wave
                     uint blockSize = ConvertInt(br.ReadBytes(4));
                     dataChunkPosition = nextChunk.ChunkStart + 16 + offset;
                     dataChunkLength = (int)nextChunk.ChunkLength - 8;
-
-                    br.ReadBytes((int)nextChunk.ChunkLength - 8);
+                    br.BaseStream.Position += (nextChunk.ChunkLength - 8);
                 }
                 else
                 {
@@ -105,10 +110,10 @@ namespace NAudio.Wave
                     {
                         chunks.Add(nextChunk);
                     }
-                    br.ReadBytes((int)nextChunk.ChunkLength);
+                    br.BaseStream.Position += nextChunk.ChunkLength;
                 }
 
-                if (nextChunk.ChunkName == "\0\0\0\0") break;
+                
             }
 
             if (format == null)
@@ -152,24 +157,12 @@ namespace NAudio.Wave
         /// <summary>
         /// <see cref="WaveStream.WaveFormat"/>
         /// </summary>
-        public override NAudio.Wave.WaveFormat WaveFormat
-        {
-            get
-            {
-                return waveFormat;
-            }
-        }
+        public override WaveFormat WaveFormat => waveFormat;
 
         /// <summary>
         /// <see cref="WaveStream.WaveFormat"/>
         /// </summary>
-        public override long Length
-        {
-            get
-            {
-                return dataChunkLength;
-            }
-        }
+        public override long Length => dataChunkLength;
 
         /// <summary>
         /// Number of Samples (if possible to calculate)
@@ -222,7 +215,8 @@ namespace NAudio.Wave
         {
             if (count % waveFormat.BlockAlign != 0)
             {
-                throw new ArgumentException(String.Format("Must read complete blocks: requested {0}, block align is {1}", count, this.WaveFormat.BlockAlign));
+                throw new ArgumentException(
+                    $"Must read complete blocks: requested {count}, block align is {WaveFormat.BlockAlign}");
             }
             lock (lockObject)
             {

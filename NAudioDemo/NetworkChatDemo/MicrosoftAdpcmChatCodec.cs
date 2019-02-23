@@ -1,11 +1,7 @@
-﻿using System;
-using System.Linq;
-using NAudio.Wave;
-using System.ComponentModel.Composition;
+﻿using NAudio.Wave;
 
 namespace NAudioDemo.NetworkChatDemo
 {
-    [Export(typeof(INetworkChatCodec))]
     class MicrosoftAdpcmChatCodec : AcmChatCodec
     {
         public MicrosoftAdpcmChatCodec()
@@ -13,6 +9,6 @@ namespace NAudioDemo.NetworkChatDemo
         {
         }
 
-        public override string Name { get { return "Microsoft ADPCM"; } }
+        public override string Name => "Microsoft ADPCM";
     }
 }

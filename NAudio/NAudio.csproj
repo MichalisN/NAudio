@@ -53,6 +53,7 @@
     <DocumentationFile>bin\Debug\NAudio.XML</DocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>NAudio.ruleset</CodeAnalysisRuleSet>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -118,8 +119,30 @@
     <Compile Include="CoreAudioApi\Interfaces\ISimpleAudioVolume.cs" />
     <Compile Include="CoreAudioApi\MMDeviceCollection.cs" />
     <Compile Include="CoreAudioApi\PropertyKeys.cs" />
+    <Compile Include="CoreAudioApi\PropVariantNative.cs" />
     <Compile Include="CoreAudioApi\SessionCollection.cs" />
     <Compile Include="CoreAudioApi\SimpleAudioVolume.cs" />
+    <Compile Include="Dmo\DmoInPlaceProcessReturn.cs" />
+    <Compile Include="Dmo\Effect\ChorusPhase.cs" />
+    <Compile Include="Dmo\Effect\ChorusWaveForm.cs" />
+    <Compile Include="Dmo\Effect\DmoChorus.cs" />
+    <Compile Include="Dmo\Effect\DmoCompressor.cs" />
+    <Compile Include="Dmo\Effect\DmoDistortion.cs" />
+    <Compile Include="Dmo\Effect\DmoEcho.cs" />
+    <Compile Include="Dmo\Effect\DmoFlanger.cs" />
+    <Compile Include="Dmo\Effect\DmoGargle.cs" />
+    <Compile Include="Dmo\Effect\DmoI3DL2Reverb.cs" />
+    <Compile Include="Dmo\Effect\DmoParamEq.cs" />
+    <Compile Include="Dmo\Effect\DmoWavesReverb.cs" />
+    <Compile Include="Dmo\Effect\EchoPanDelay.cs" />
+    <Compile Include="Dmo\Effect\FlangerPhase.cs" />
+    <Compile Include="Dmo\Effect\FlangerWaveForm.cs" />
+    <Compile Include="Dmo\Effect\GargleWaveShape.cs" />
+    <Compile Include="Dmo\Effect\I3DL2EnvironmentPreset.cs" />
+    <Compile Include="Dmo\Effect\IDmoEffector.cs" />
+    <Compile Include="Dmo\MediaObjectInPlace.cs" />
+    <Compile Include="Dmo\DmoInPlaceProcessFlags.cs" />
+    <Compile Include="Dmo\IMediaObjectInPlace.cs" />
     <Compile Include="Dsp\EnvelopeGenerator.cs" />
     <Compile Include="Dsp\WdlResampler.cs" />
     <Compile Include="FileFormats\Wav\WaveFileChunkReader.cs" />
@@ -127,6 +150,7 @@
     <Compile Include="MediaFoundation\IMFReadWriteClassFactory.cs" />
     <Compile Include="MediaFoundation\MediaFoundationErrors.cs" />
     <Compile Include="MediaFoundation\MediaTypes.cs" />
+    <Compile Include="Midi\RawMetaEvent.cs" />
     <Compile Include="Utils\ChunkIdentifier.cs" />
     <Compile Include="Utils\FieldDescriptionAttribute.cs" />
     <Compile Include="MediaFoundation\IMFActivate.cs" />
@@ -163,13 +187,20 @@
     <Compile Include="Midi\MidiInMessageEventArgs.cs" />
     <Compile Include="Utils\ByteArrayExtensions.cs" />
     <Compile Include="Utils\FieldDescriptionHelper.cs" />
+    <Compile Include="Utils\MarshalHelpers.cs" />
     <Compile Include="Utils\WavePositionExtensions.cs" />
     <Compile Include="Utils\IEEE.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
+    <Compile Include="Wave\Asio\Asio64Bit.cs" />
+    <Compile Include="Wave\Asio\AsioCallbacks.cs" />
+    <Compile Include="Wave\Asio\AsioChannelInfo.cs" />
     <Compile Include="Wave\Asio\AsioDriverCapability.cs" />
+    <Compile Include="Wave\Asio\AsioError.cs" />
+    <Compile Include="Wave\Asio\AsioMessageSelector.cs" />
     <Compile Include="Wave\Asio\AsioSampleType.cs" />
     <Compile Include="Wave\Compression\AcmDriverAddFlags.cs" />
     <Compile Include="Wave\SampleProviders\AdsrSampleProvider.cs" />
+    <Compile Include="Wave\SampleProviders\ConcatenatingSampleProvider.cs" />
     <Compile Include="Wave\SampleProviders\FadeInOutSampleProvider.cs" />
     <Compile Include="Wave\SampleProviders\MultiplexingSampleProvider.cs" />
     <Compile Include="Wave\SampleProviders\OffsetSampleProvider.cs" />
@@ -178,6 +209,9 @@
     <Compile Include="Wave\SampleProviders\SampleToWaveProvider16.cs" />
     <Compile Include="Wave\SampleProviders\SampleToWaveProvider24.cs" />
     <Compile Include="Wave\SampleProviders\SignalGenerator.cs" />
+    <Compile Include="Dsp\SmbPitchShifter.cs" />
+    <Compile Include="Wave\SampleProviders\SmbPitchShiftingSampleProvider.cs" />
+    <Compile Include="Wave\SampleProviders\StereoToMonoSampleProvider.cs" />
     <Compile Include="Wave\SampleProviders\WaveToSampleProvider64.cs" />
     <Compile Include="Wave\SampleProviders\WdlResamplingSampleProvider.cs" />
     <Compile Include="Wave\WaveExtensionMethods.cs" />
@@ -206,9 +240,6 @@
     <Compile Include="Dsp\ImpulseResponseConvolution.cs" />
     <Compile Include="Dsp\SimpleCompressor.cs" />
     <Compile Include="Dsp\SimpleGate.cs" />
-    <Compile Include="FileFormats\Map\CakewalkDrumMapping.cs" />
-    <Compile Include="FileFormats\Map\CakewalkMapFile.cs" />
-    <Compile Include="FileFormats\Map\MapBlockHeader.cs" />
     <Compile Include="FileFormats\Mp3\ChannelMode.cs" />
     <Compile Include="FileFormats\Mp3\DmoMp3FrameDecompressor.cs" />
     <Compile Include="FileFormats\Mp3\Id3v2Tag.cs" />
@@ -218,7 +249,6 @@
     <Compile Include="FileFormats\Mp3\MpegLayer.cs" />
     <Compile Include="FileFormats\Mp3\MpegVersion.cs" />
     <Compile Include="FileFormats\Mp3\XingHeader.cs" />
-    <Compile Include="FileFormats\Sfz\SfzFileReader.cs" />
     <Compile Include="FileFormats\SoundFont\Generator.cs" />
     <Compile Include="FileFormats\SoundFont\GeneratorBuilder.cs" />
     <Compile Include="FileFormats\SoundFont\GeneratorEnum.cs" />
@@ -353,10 +383,10 @@
     <Compile Include="CoreAudioApi\MMDeviceEnumerator.cs" />
     <Compile Include="CoreAudioApi\PropertyStore.cs" />
     <Compile Include="CoreAudioApi\PropertyStoreProperty.cs" />
-    <Compile Include="Wave\Asio\ASIODriver.cs" />
-    <Compile Include="Wave\Asio\ASIODriverExt.cs" />
-    <Compile Include="Wave\Asio\ASIOSampleConvertor.cs" />
-    <Compile Include="Wave\Asio\ASIOStructures.cs" />
+    <Compile Include="Wave\Asio\AsioDriver.cs" />
+    <Compile Include="Wave\Asio\AsioDriverExt.cs" />
+    <Compile Include="Wave\Asio\AsioSampleConvertor.cs" />
+    <Compile Include="Wave\Asio\AsioStructures.cs" />
     <Compile Include="Wave\Compression\AcmDriver.cs" />
     <Compile Include="Wave\Compression\AcmDriverDetails.cs" />
     <Compile Include="Wave\Compression\AcmDriverDetailsSupportFlags.cs" />
@@ -392,9 +422,7 @@
     <Compile Include="Wave\MmeInterop\WaveInterop.cs" />
     <Compile Include="Wave\MmeInterop\WaveOutCapabilities.cs" />
     <Compile Include="Wave\MmeInterop\WaveOutSupport.cs" />
-    <Compile Include="Wave\MmeInterop\WaveWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Wave\MmeInterop\WaveWindow.cs" />
     <Compile Include="Wave\SampleChunkConverters\ISampleChunkConverter.cs" />
     <Compile Include="Wave\SampleChunkConverters\Mono16SampleChunkConverter.cs" />
     <Compile Include="Wave\SampleChunkConverters\Mono24SampleChunkConverter.cs" />
@@ -422,6 +450,8 @@
     <Compile Include="Wave\WaveOutputs\AiffFileWriter.cs" />
     <Compile Include="Wave\WaveOutputs\AsioAudioAvailableEventArgs.cs" />
     <Compile Include="Wave\WaveOutputs\AsioOut.cs" />
+    <Compile Include="Wave\WaveOutputs\BextChunkInfo.cs" />
+    <Compile Include="Wave\WaveOutputs\BwfWriter.cs" />
     <Compile Include="Wave\WaveOutputs\CueWaveFileWriter.cs" />
     <Compile Include="Wave\WaveOutputs\MediaFoundationEncoder.cs" />
     <Compile Include="MediaFoundation\MediaType.cs" />
@@ -446,10 +476,12 @@
     <Compile Include="Wave\SampleProviders\SampleToWaveProvider.cs" />
     <Compile Include="Wave\WaveProviders\BufferedWaveProvider.cs" />
     <Compile Include="Wave\SampleProviders\MonoToStereoSampleProvider.cs" />
+    <Compile Include="Wave\WaveProviders\DmoEffectWaveProvider.cs" />
     <Compile Include="Wave\WaveProviders\MediaFoundationResampler.cs" />
     <Compile Include="MediaFoundation\MediaFoundationTransform.cs" />
     <Compile Include="Wave\WaveProviders\MixingWaveProvider32.cs" />
     <Compile Include="Wave\WaveProviders\MultiplexingWaveProvider.cs" />
+    <Compile Include="Wave\WaveProviders\SilenceWaveProvider.cs" />
     <Compile Include="Wave\WaveProviders\StereoToMonoProvider16.cs" />
     <Compile Include="Wave\WaveProviders\MonoToStereoProvider16.cs" />
     <Compile Include="Wave\WaveProviders\VolumeWaveProvider16.cs" />
@@ -463,6 +495,7 @@
     <Compile Include="Wave\WaveStreams\AiffFileReader.cs" />
     <Compile Include="Wave\WaveStreams\AudioFileReader.cs" />
     <Compile Include="Wave\WaveStreams\BlockAlignReductionStream.cs" />
+    <Compile Include="Wave\WaveStreams\ComStream.cs" />
     <Compile Include="Wave\WaveStreams\CueList.cs" />
     <Compile Include="Wave\WaveStreams\CueWaveFileReader.cs" />
     <Compile Include="Wave\WaveStreams\ISampleNotifier.cs" />
@@ -475,10 +508,12 @@
     <Compile Include="Wave\WaveStreams\ResamplerDmoStream.cs" />
     <Compile Include="Wave\WaveStreams\RiffChunk.cs" />
     <Compile Include="Wave\WaveStreams\SimpleCompressorStream.cs" />
+    <Compile Include="Wave\WaveStreams\StreamMediaFoundationReader.cs" />
     <Compile Include="Wave\WaveStreams\Wave32To16Stream.cs" />
     <Compile Include="Wave\WaveStreams\WaveChannel32.cs" />
     <Compile Include="Wave\SampleProviders\SampleChannel.cs" />
     <Compile Include="Wave\WaveStreams\WaveFileReader.cs" />
+    <Compile Include="Wave\WaveStreams\WaveFormatConversionProvider.cs" />
     <Compile Include="Wave\WaveStreams\WaveFormatConversionStream.cs" />
     <Compile Include="Wave\WaveStreams\WaveInBuffer.cs" />
     <Compile Include="Wave\WaveStreams\WaveMixerStream32.cs" />

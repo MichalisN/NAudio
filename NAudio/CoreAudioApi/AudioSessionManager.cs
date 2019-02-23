@@ -26,10 +26,8 @@ namespace NAudio.CoreAudioApi
         private AudioSessionControl audioSessionControl;
 
         /// <summary>
-        /// 
+        /// Session created delegate
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="newSession"></param>
         public delegate void SessionCreatedDelegate(object sender, IAudioSessionControl newSession);
         
         /// <summary>
@@ -55,9 +53,7 @@ namespace NAudio.CoreAudioApi
             {
                 if (simpleAudioVolume == null)
                 {
-                    ISimpleAudioVolume simpleAudioInterface;
-
-                    audioSessionInterface.GetSimpleAudioVolume(Guid.Empty, 0, out simpleAudioInterface);
+                    audioSessionInterface.GetSimpleAudioVolume(Guid.Empty, 0, out var simpleAudioInterface);
 
                     simpleAudioVolume = new SimpleAudioVolume(simpleAudioInterface);
                 }
@@ -75,9 +71,7 @@ namespace NAudio.CoreAudioApi
             {
                 if (audioSessionControl == null)
                 {
-                    IAudioSessionControl audioSessionControlInterface;
-
-                    audioSessionInterface.GetAudioSessionControl(Guid.Empty, 0, out audioSessionControlInterface);
+                    audioSessionInterface.GetAudioSessionControl(Guid.Empty, 0, out var audioSessionControlInterface);
 
                     audioSessionControl = new AudioSessionControl(audioSessionControlInterface);
                 }
@@ -87,8 +81,7 @@ namespace NAudio.CoreAudioApi
 
         internal void FireSessionCreated(IAudioSessionControl newSession)
         {
-            if (OnSessionCreated != null)
-                OnSessionCreated(this, newSession);
+            OnSessionCreated?.Invoke(this, newSession);
         }
 
         /// <summary>
@@ -100,8 +93,7 @@ namespace NAudio.CoreAudioApi
 
             if (audioSessionInterface2 != null)
             {
-                IAudioSessionEnumerator sessionEnum;
-                Marshal.ThrowExceptionForHR(audioSessionInterface2.GetSessionEnumerator(out sessionEnum));
+                Marshal.ThrowExceptionForHR(audioSessionInterface2.GetSessionEnumerator(out var sessionEnum));
                 sessions = new SessionCollection(sessionEnum);
 
                 audioSessionNotification = new AudioSessionNotification(this);
@@ -112,13 +104,7 @@ namespace NAudio.CoreAudioApi
         /// <summary>
         /// Returns list of sessions of current device.
         /// </summary>
-        public SessionCollection Sessions
-        {
-            get
-            {
-                return sessions;
-            }
-        }
+        public SessionCollection Sessions => sessions;
 
         /// <summary>
         /// Dispose.
@@ -132,11 +118,14 @@ namespace NAudio.CoreAudioApi
 
         private void UnregisterNotifications()
         {
-            if (sessions != null)
-                sessions = null;
+            sessions = null;
 
-            if (audioSessionNotification != null)
-                Marshal.ThrowExceptionForHR(audioSessionInterface2.UnregisterSessionNotification(audioSessionNotification));
+            if (audioSessionNotification != null && audioSessionInterface2 != null)
+            {
+                Marshal.ThrowExceptionForHR(
+                    audioSessionInterface2.UnregisterSessionNotification(audioSessionNotification));
+                audioSessionNotification = null;
+            }
         }
 
         /// <summary>

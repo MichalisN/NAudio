@@ -11,11 +11,11 @@ namespace NAudio.Midi
     /// </summary>
     public class MidiFile 
     {
-        private MidiEventCollection events;
-        private ushort fileFormat;
+        private readonly MidiEventCollection events;
+        private readonly ushort fileFormat;
         //private ushort tracks;
-        private ushort deltaTicksPerQuarterNote;
-        private bool strictChecking;
+        private readonly ushort deltaTicksPerQuarterNote;
+        private readonly bool strictChecking;
 
         /// <summary>
         /// Opens a MIDI file for reading
@@ -29,22 +29,34 @@ namespace NAudio.Midi
         /// <summary>
         /// MIDI File format
         /// </summary>
-        public int FileFormat
-        {
-            get { return fileFormat; }
-        }
+        public int FileFormat => fileFormat;
 
         /// <summary>
         /// Opens a MIDI file for reading
         /// </summary>
         /// <param name="filename">Name of MIDI file</param>
         /// <param name="strictChecking">If true will error on non-paired note events</param>
-        public MidiFile(string filename, bool strictChecking)
+        public MidiFile(string filename, bool strictChecking) :
+            this(File.OpenRead(filename), strictChecking, true)
+        {
+        }
+
+        /// <summary>
+        /// Opens a MIDI file stream for reading
+        /// </summary>
+        /// <param name="inputStream">The input stream containing a MIDI file</param>
+        /// <param name="strictChecking">If true will error on non-paired note events</param>
+        public MidiFile(Stream inputStream, bool strictChecking) :
+            this(inputStream, strictChecking, false)
+        {
+        }
+
+        private MidiFile(Stream inputStream, bool strictChecking, bool ownInputStream)
         {
             this.strictChecking = strictChecking;
             
-            var br = new BinaryReader(File.OpenRead(filename));
-            using(br) 
+            var br = new BinaryReader(inputStream);
+            try 
             {
                 string chunkHeader = Encoding.UTF8.GetString(br.ReadBytes(4));
                 if(chunkHeader != "MThd") 
@@ -88,13 +100,27 @@ namespace NAudio.Midi
                     var outstandingNoteOns = new List<NoteOnEvent>();
                     while(br.BaseStream.Position < startPos + chunkSize) 
                     {
-                        me = MidiEvent.ReadNextEvent(br,me);
+                        try
+                        {
+                            me = MidiEvent.ReadNextEvent(br, me);
+                        }
+                        catch (InvalidDataException)
+                        {
+                            if (strictChecking) throw;
+                            continue;
+                        }
+                        catch (FormatException)
+                        {
+                            if (strictChecking) throw;
+                            continue;
+                        }
+
                         absoluteTime += me.DeltaTime;
                         me.AbsoluteTime = absoluteTime;
                         events[track].Add(me);
                         if (me.CommandCode == MidiCommandCode.NoteOn) 
                         {
-                            NoteEvent ne = (NoteEvent) me;
+                            var ne = (NoteEvent) me;
                             if(ne.Velocity > 0) 
                             {
                                 outstandingNoteOns.Add((NoteOnEvent) ne);
@@ -122,7 +148,8 @@ namespace NAudio.Midi
                                 {
                                     if (br.BaseStream.Position < startPos + chunkSize)
                                     {
-                                        throw new FormatException(String.Format("End Track event was not the last MIDI event on track {0}", track));
+                                        throw new FormatException(
+                                            $"End Track event was not the last MIDI event on track {track}");
                                     }
                                 }
                             }
@@ -132,40 +159,37 @@ namespace NAudio.Midi
                     {
                         if (strictChecking)
                         {
-                            throw new FormatException(String.Format("Note ons without note offs {0} (file format {1})", outstandingNoteOns.Count, fileFormat));
+                            throw new FormatException(
+                                $"Note ons without note offs {outstandingNoteOns.Count} (file format {fileFormat})");
                         }
                     }
                     if(br.BaseStream.Position != startPos + chunkSize) 
                     {
-                        throw new FormatException(String.Format("Read too far {0}+{1}!={2}", chunkSize, startPos, br.BaseStream.Position));
+                        throw new FormatException($"Read too far {chunkSize}+{startPos}!={br.BaseStream.Position}");
                     }
                 }
+            }
+            finally
+            {
+                if (ownInputStream)
+                    br.Close();
             }
         }
 
         /// <summary>
         /// The collection of events in this MIDI file
         /// </summary>
-        public MidiEventCollection Events
-        {
-            get { return events; }
-        }
+        public MidiEventCollection Events => events;
 
         /// <summary>
         /// Number of tracks in this MIDI file
         /// </summary>
-        public int Tracks
-        {
-            get { return events.Tracks; }
-        }
+        public int Tracks => events.Tracks;
 
         /// <summary>
         /// Delta Ticks Per Quarter Note
         /// </summary>
-        public int DeltaTicksPerQuarterNote
-        {
-            get { return deltaTicksPerQuarterNote; }
-        }
+        public int DeltaTicksPerQuarterNote => deltaTicksPerQuarterNote;
 
         private void FindNoteOn(NoteEvent offEvent, List<NoteOnEvent> outstandingNoteOns)
         {
@@ -184,7 +208,7 @@ namespace NAudio.Midi
             {
                 if (strictChecking)
                 {
-                    throw new FormatException(String.Format("Got an off without an on {0}", offEvent));
+                    throw new FormatException($"Got an off without an on {offEvent}");
                 }
             }
         }
@@ -208,9 +232,9 @@ namespace NAudio.Midi
             var sb = new StringBuilder();
             sb.AppendFormat("Format {0}, Tracks {1}, Delta Ticks Per Quarter Note {2}\r\n",
                 fileFormat,Tracks,deltaTicksPerQuarterNote);
-            for (int n = 0; n < Tracks; n++)
+            for (var n = 0; n < Tracks; n++)
             {
-                foreach (MidiEvent midiEvent in events[n])
+                foreach (var midiEvent in events[n])
                 {
                     sb.AppendFormat("{0}\r\n", midiEvent);
                 }
@@ -232,7 +256,7 @@ namespace NAudio.Midi
             using (var writer = new BinaryWriter(File.Create(filename)))
             {
                 writer.Write(Encoding.UTF8.GetBytes("MThd"));
-                writer.Write(SwapUInt32((uint)6)); // chunk size
+                writer.Write(SwapUInt32(6)); // chunk size
                 writer.Write(SwapUInt16((ushort)events.MidiFileType));
                 writer.Write(SwapUInt16((ushort)events.Tracks));
                 writer.Write(SwapUInt16((ushort)events.DeltaTicksPerQuarterNote));
@@ -243,7 +267,7 @@ namespace NAudio.Midi
 
                     writer.Write(Encoding.UTF8.GetBytes("MTrk"));
                     long trackSizePosition = writer.BaseStream.Position;
-                    writer.Write(SwapUInt32((uint)0));
+                    writer.Write(SwapUInt32(0));
 
                     long absoluteTime = events.StartAbsoluteTime;
 
@@ -254,7 +278,7 @@ namespace NAudio.Midi
                     {
                         System.Diagnostics.Debug.Assert(MidiEvent.IsEndTrack(eventList[eventList.Count - 1]), "Exporting a track with a missing end track");
                     }
-                    foreach (MidiEvent midiEvent in eventList)
+                    foreach (var midiEvent in eventList)
                     {
                         midiEvent.Export(ref absoluteTime, writer);
                     }

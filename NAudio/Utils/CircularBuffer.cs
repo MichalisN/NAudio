@@ -99,23 +99,34 @@ namespace NAudio.Utils
         /// <summary>
         /// Maximum length of this circular buffer
         /// </summary>
-        public int MaxLength
-        {
-            get { return buffer.Length; }
-        }
+        public int MaxLength => buffer.Length;
 
         /// <summary>
         /// Number of bytes currently stored in the circular buffer
         /// </summary>
         public int Count
         {
-            get { return byteCount; }
+            get
+            {
+                lock (lockObject)
+                {
+                    return byteCount;
+                }
+            }
         }
 
         /// <summary>
         /// Resets the buffer
         /// </summary>
         public void Reset()
+        {
+            lock (lockObject)
+            {
+                ResetInner();
+            }
+        }
+
+        private void ResetInner()
         {
             byteCount = 0;
             readPosition = 0;
@@ -128,15 +139,18 @@ namespace NAudio.Utils
         /// <param name="count">Bytes to advance</param>
         public void Advance(int count)
         {
-            if (count >= byteCount)
+            lock (lockObject)
             {
-                Reset();
-            }
-            else
-            {
-                byteCount -= count;
-                readPosition += count;
-                readPosition %= MaxLength;
+                if (count >= byteCount)
+                {
+                    ResetInner();
+                }
+                else
+                {
+                    byteCount -= count;
+                    readPosition += count;
+                    readPosition %= MaxLength;
+                }
             }
         }
     }

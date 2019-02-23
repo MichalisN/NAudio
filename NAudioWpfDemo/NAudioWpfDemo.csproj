@@ -67,7 +67,6 @@
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\pnunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -76,10 +75,6 @@
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UIAutomationProvider">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
@@ -118,6 +113,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="EqualizationDemo\EqualizationDemoView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="FireAndForgetPlayback\FireAndForgetPlaybackView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -210,6 +209,15 @@
     <Compile Include="EqualizationDemo\EqualizationDemoViewModel.cs" />
     <Compile Include="EqualizationDemo\Equalizer.cs" />
     <Compile Include="EqualizationDemo\EqualizerBand.cs" />
+    <Compile Include="FireAndForgetPlayback\AudioPlaybackEngine.cs" />
+    <Compile Include="FireAndForgetPlayback\AutoDisposeFileReader.cs" />
+    <Compile Include="FireAndForgetPlayback\CachedSound.cs" />
+    <Compile Include="FireAndForgetPlayback\CachedSoundSampleProvider.cs" />
+    <Compile Include="FireAndForgetPlayback\FireAndForgetDemoPlugin.cs" />
+    <Compile Include="FireAndForgetPlayback\FireAndForgetPlaybackView.xaml.cs">
+      <DependentUpon>FireAndForgetPlaybackView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="FireAndForgetPlayback\FireAndForgetPlaybackViewModel.cs" />
     <Compile Include="IModule.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -261,6 +269,7 @@
     <Compile Include="SpectrumAnalyser.xaml.cs">
       <DependentUpon>SpectrumAnalyser.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Utils\ReflectionHelper.cs" />
     <Compile Include="ViewModel\DelegateCommand.cs" />
     <Compile Include="ViewModel\RelayCommand.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
